@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
+/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:05 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/14 12:25:36 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/06/20 08:48:42 by skully           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ int assign_manager_time(t_manager *manager, int *val)
 {
     struct timeval tv;
     if(val[0] == 0 || val[1] == 0 || val[2] == 0 || val[3] == 0 || (val[4] != -1 && val[4] == 0))
-        return (-1);
+    {return (-1);}
 	manager->number_of_philosophers = val[0];
 	manager->time_to_die = val[1];
 	manager->time_to_eat = val[2];
@@ -62,15 +62,18 @@ void *monitor(void *arg)
     t_manager *manager;
     int i;
 
+    printf("\e[1;31mIM HEREEEERE!!!\e[0m\n");
     manager = (t_manager *)arg;
     while(!manager->died)
     {
         i = 0;
         while(i < manager->number_of_philosophers)
         {
-            if(manager->philos[i].state == DEAD)
+            printf("\e[1;32mmanager time since %d ate : %ld\e[0m\n", i, manager->philos[i].time_since_ate);
+            if(manager->philos[i].time_since_ate > manager->time_to_die)
             {
                 manager->died = true;
+                manager->death_index = i;
                 break;
             }
             i++;
@@ -96,22 +99,30 @@ void *routine(void *arg)
     philo = (t_philo *)arg;
     gettimeofday(&tv, NULL);
     philo->current_time = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+    philo->time_since_ate = get_current_time(philo);
     if(philo->index % 2 == 0)
-        usleep(1000);
+    {
+        // usleep(2000);
+        printf("%ld %d is sleeping\n", get_current_time(philo) ,philo->index);
+        usleep(philo->manager->time_to_sleep * 1000);
+    }
     while(!philo->manager->died)
     {
         printf("%ld %d is thinking\n", get_current_time(philo) ,philo->index);
         pthread_mutex_lock(philo->left);
-        printf("%ld %d has taken a fork\n", get_current_time(philo) ,philo->index);
+        // printf("%ld %d has taken a fork\n", get_current_time(philo) ,philo->index);
         pthread_mutex_lock(philo->right);
-        printf("%ld %d has taken a fork\n", get_current_time(philo) ,philo->index);
+        // printf("%ld %d has taken a fork\n", get_current_time(philo) ,philo->index);
         printf("%ld %d is eating\n", get_current_time(philo) ,philo->index);
+        philo->time_since_ate = get_current_time(philo);
         usleep(philo->manager->time_to_eat * 1000);
         pthread_mutex_unlock(philo->left);
         pthread_mutex_unlock(philo->right);
         printf("%ld %d is sleeping\n", get_current_time(philo) ,philo->index);
         usleep(philo->manager->time_to_sleep * 1000);
     }
+    if(philo->manager->death_index == philo->index)
+        printf("%ld %d died\n", get_current_time(philo) ,philo->index);
     return NULL;
 }
 
@@ -125,9 +136,10 @@ void init_philo(t_manager *manager)
     while(i < n)
     {
         manager->philos[i].index = i;
-        manager->philos[i].left = &(manager->forks[(i - 1 + n) % n]);
+        manager->philos[i].left = &(manager->forks[i]);
         manager->philos[i].right = &(manager->forks[(i + 1) % n]);
         manager->philos[i].manager = manager;
+        manager->philos[i].time_since_ate = 0;
         i++;
     }
 
@@ -164,18 +176,20 @@ int main(int ac, char **av)
     if(ac > 6 || ac < 5)
         return(printf("\e[1;31mError : Invalid number of arguments\e[0m\n"), 1);
     if(check_args(&manager, av) == -1)
-        return(printf("\e[1;33mError : Invalid values in arguments\e[0m\n"), 1);
+        {return(printf("\e[1;33mError : Invalid values in arguments\e[0m\n"), 1);}
 	if(alloc_philo_fork(&manager) == -1)
         return(printf("\e[1;31mError : Memory allocation error\e[0m\n"), 1);
     init_philo(&manager);
     init_forks(&manager);
     manager.index = 0;
+    pthread_create(&manager.monitor, NULL, &monitor, NULL);
     while(manager.index < manager.number_of_philosophers)
     {
         pthread_create(&(manager.philos[manager.index].thread), NULL, &routine, &(manager.philos[manager.index]));
         manager.index++;
     }
     manager.index = 0;
+    pthread_join(manager.monitor, NULL);
     while(manager.index < manager.number_of_philosophers)
     {
         pthread_join(manager.philos[manager.index].thread, NULL);
@@ -183,8 +197,8 @@ int main(int ac, char **av)
     }
     destroy_forks(&manager);
     return (0);
-    // pthread_create(manager.monitor, NULL, &monitor, NULL);
 }
+
 	// printf("Correct args!\n");
 	// printf("philos : %d\n", manager.number_of_philosophers);
 	// printf("time_to_die : %d\n", manager.time_to_die);

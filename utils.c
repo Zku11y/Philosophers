@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
+/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/12 14:02:09 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/14 10:50:49 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/06/19 21:39:05 by skully           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ void	*ft_calloc(size_t count, size_t size)
 
 	if (count == 0 || size == 0)
 	{
-		ptr = malloc(0);
+		ptr = NULL;
 		return (ptr);
 	}
 	ptr = malloc(count * size);
