@@ -3,15 +3,22 @@
 /*                                                        :::      ::::::::   */
 /*   philo.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:05 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/20 08:48:42 by skully           ###   ########.fr       */
+/*   Updated: 2025/06/20 11:59:01 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 
+long get_current_time(t_philo *philo)
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    philo->current_time = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+    return philo->current_time - philo->manager->start_time;
+}
 
 int assign_manager_time(t_manager *manager, int *val)
 {
@@ -62,19 +69,20 @@ void *monitor(void *arg)
     t_manager *manager;
     int i;
 
-    printf("\e[1;31mIM HEREEEERE!!!\e[0m\n");
+    // printf("\e[1;31mIM HEREEEERE!!!\e[0m\n");
     manager = (t_manager *)arg;
+    // printf("\e[1;32mmanager time since %d ate : %ld\e[0m\n", 0, manager->philos[0].time_since_ate);
     while(!manager->died)
     {
         i = 0;
         while(i < manager->number_of_philosophers)
         {
-            printf("\e[1;32mmanager time since %d ate : %ld\e[0m\n", i, manager->philos[i].time_since_ate);
+            // printf("\e[1;32mmanager time since %d ate : %ld\e[0m\n", i, manager->philos[i].time_since_ate);
             if(manager->philos[i].time_since_ate > manager->time_to_die)
             {
                 manager->died = true;
                 manager->death_index = i;
-                break;
+                return NULL;
             }
             i++;
         }
@@ -82,13 +90,7 @@ void *monitor(void *arg)
     return NULL;
 }
 
-long get_current_time(t_philo *philo)
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    philo->current_time = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
-    return philo->current_time - philo->manager->start_time;
-}
+
 
 void *routine(void *arg)
 {
@@ -121,8 +123,8 @@ void *routine(void *arg)
         printf("%ld %d is sleeping\n", get_current_time(philo) ,philo->index);
         usleep(philo->manager->time_to_sleep * 1000);
     }
-    if(philo->manager->death_index == philo->index)
-        printf("%ld %d died\n", get_current_time(philo) ,philo->index);
+    // if(philo->manager->death_index == philo->index)
+    //     printf("%ld %d died\n", get_current_time(philo) ,philo->index);
     return NULL;
 }
 
@@ -182,19 +184,21 @@ int main(int ac, char **av)
     init_philo(&manager);
     init_forks(&manager);
     manager.index = 0;
-    pthread_create(&manager.monitor, NULL, &monitor, NULL);
+    pthread_create(&manager.monitor, NULL, &monitor, &manager);
     while(manager.index < manager.number_of_philosophers)
     {
         pthread_create(&(manager.philos[manager.index].thread), NULL, &routine, &(manager.philos[manager.index]));
         manager.index++;
     }
     manager.index = 0;
-    pthread_join(manager.monitor, NULL);
     while(manager.index < manager.number_of_philosophers)
     {
         pthread_join(manager.philos[manager.index].thread, NULL);
         manager.index++;
     }
+    pthread_join(manager.monitor, NULL);
+    if(manager.died)
+        printf("%ld %d died\n", manager.philos[manager.death_index].time_since_ate ,manager.philos[manager.death_index].index);
     destroy_forks(&manager);
     return (0);
 }
