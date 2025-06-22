@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:07 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/19 22:31:26 by skully           ###   ########.fr       */
+/*   Updated: 2025/06/22 17:46:17 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,14 @@ typedef struct s_philo
     t_manager *manager;
     long current_time;
     long time_since_ate;
+    bool created;
 }   t_philo;
 
 typedef struct s_manager
 {
     int index;
     int death_index;
+    long death_time;
     long start_time;
     pthread_mutex_t *forks;
     pthread_t monitor;
@@ -56,6 +58,8 @@ typedef struct s_manager
     int time_to_sleep;
     int number_of_times_to_eat;
     bool died;
+    bool all_ready;
+    struct timeval tv;
 }   t_manager;
 
 
