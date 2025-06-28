@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo_bonus.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
+/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:07 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/28 16:43:36 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/06/28 18:46:53 by skully           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 #include <stdbool.h>
 #include <fcntl.h>
 #include <semaphore.h>
+#include <sys/wait.h>
+#include <signal.h>
 
 typedef enum s_state
 {
@@ -66,7 +68,9 @@ typedef struct s_manager
     bool parent;
     struct timeval tv;
     pid_t *pids;
-    sem_t sem;
+    sem_t *sem;
+    pthread_mutex_t time_lock;
+    long time_since_ate;
 }   t_manager;
 
 
