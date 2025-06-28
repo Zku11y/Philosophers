@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   philo.c                                            :+:      :+:    :+:   */
+/*   philo_bonus.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:05 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/28 11:09:04 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/06/28 16:48:40 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "philo_bonus.h"
 
 long get_current_time(t_philo *philo)
 {
@@ -42,7 +42,6 @@ int assign_manager_time(t_manager *manager, int *val)
 	manager->number_of_times_to_eat = val[4];
     manager->died = false;
     manager->all_ready = false;
-    pthread_mutex_init(&manager->death_check, NULL);
 	return (0);
 }
 
@@ -61,17 +60,6 @@ int check_args(t_manager *manager, char **av)
 	if(assign_manager_time(manager, val) == -1)
 		return -1;
 	return 0;
-}
-
-int alloc_philo_fork(t_manager *manager)
-{
-    manager->philos = ft_calloc(manager->number_of_philosophers + 1, sizeof(t_philo));
-    if(manager->philos == NULL)
-        return -1;
-    manager->forks = ft_calloc(manager->number_of_philosophers + 1, sizeof(pthread_mutex_t));
-    if(manager->forks == NULL)
-        return (free(manager->philos), -1);
-    return 0;
 }
 
 void *monitor(void *arg)
@@ -152,6 +140,7 @@ int ft_sleep(t_philo *philo, int time)
 
 void *routine(void *arg)
 {
+    t_manager *manager;
     t_philo *philo;
     struct timeval tv;
 
@@ -159,7 +148,6 @@ void *routine(void *arg)
     philo->current_time = philo->manager->start_time;
     while(philo->manager->all_ready == false);
     // printf("im here\n");
-    gettimeofday(&tv, NULL);
     if(philo->index % 2 == 0)
     {
         // usleep(2000);
@@ -248,36 +236,29 @@ void destroy_mutex(t_manager *manager)
 int main(int ac, char **av)
 {
     t_manager manager;
+    pid_t pid;
 
     if(ac > 6 || ac < 5)
         return(printf("\e[1;31mError : Invalid number of arguments\e[0m\n"), 1);
     if(check_args(&manager, av) == -1)
         {return(printf("\e[1;33mError : Invalid values in arguments\e[0m\n"), 1);}
-	if(alloc_philo_fork(&manager) == -1)
-        return(printf("\e[1;31mError : Memory allocation error\e[0m\n"), 1);
-    init_philo(&manager);
-    init_forks(&manager);
+    manager.pids = malloc(manager.number_of_philosophers * sizeof(pid_t) + 1);
+    sem_open("/philo_sem", O_CREAT | O_EXCL, 0777, manager.number_of_philosophers);
     manager.index = 0;
     while(manager.index < manager.number_of_philosophers)
     {
-
-        pthread_create(&(manager.philos[manager.index].thread), NULL, &routine, &(manager.philos[manager.index]));
+        pid = fork();
+        manager.parent = false;
+        if(pid == 0)
+            break;
+        manager.parent = true;
+        manager.pids[manager.index] = pid;
         manager.index++;
     }
-    pthread_create(&manager.monitor, NULL, &monitor, &manager);
-    manager.all_ready = true;
-    gettimeofday(&manager.tv, NULL);
-    manager.start_time = (manager.tv.tv_sec * 1000) + (manager.tv.tv_usec / 1000);
-    manager.index = 0;
-    while(manager.index < manager.number_of_philosophers)
+    if(manager.parent == false)
     {
-        pthread_join(manager.philos[manager.index].thread, NULL);
-        manager.index++;
+        
     }
-    pthread_join(manager.monitor, NULL);
-    if(manager.died)
-        printf("%ld %d died\n", manager.death_time ,manager.philos[manager.death_index].index);
-    destroy_mutex(&manager);
     return (0);
 }
 

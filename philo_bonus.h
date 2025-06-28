@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   philo.h                                            :+:      :+:    :+:   */
+/*   philo_bonus.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:07 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/28 11:03:02 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/06/28 16:43:36 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 #include <sys/time.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <fcntl.h>
+#include <semaphore.h>
 
 typedef enum s_state
 {
@@ -61,7 +63,10 @@ typedef struct s_manager
     int number_of_times_to_eat;
     bool died;
     bool all_ready;
+    bool parent;
     struct timeval tv;
+    pid_t *pids;
+    sem_t sem;
 }   t_manager;
 
 
