@@ -6,7 +6,7 @@
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:07 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/22 17:46:17 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/06/28 11:03:02 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@ typedef struct s_philo
     t_state state;
     pthread_mutex_t *left;
     pthread_mutex_t *right;
+    pthread_mutex_t time_lock;
     pthread_t thread;
     int times_ate;
     t_manager *manager;
@@ -50,6 +51,7 @@ typedef struct s_manager
     long death_time;
     long start_time;
     pthread_mutex_t *forks;
+    pthread_mutex_t death_check;
     pthread_t monitor;
     t_philo *philos;
     int number_of_philosophers;

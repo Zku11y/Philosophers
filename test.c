@@ -1,18 +1,17 @@
 #include <stdio.h>
-#include <unistd.h>
+#include <semaphore.h>
 
-int main()
-{
-    int i;
+sem_t sem;
 
-    i = 0;
-    while(i < 2000)
-    {
-        i += 100;
-        if(i > 2000)
-            usleep(i - 2000 - 100);
-        else
-            usleep(100);
-    }
-        return 0;
-}
+// int main(int ac, char **av, char **env) {
+//     a[5] //  a[0] = 3
+// }
+
+// recursion()
+// {
+//     if(row == dest)
+//     {
+//         pritnt
+//         return;
+//     }
+// }
