@@ -16,7 +16,7 @@ all:$(NAME)
 $(NAME):$(OBJ)
 	@$(CC) $(FLAGS) $(OBJ) -o $(NAME)
 
-%.o:%.c philo.h
+%.o:%.c philo_bonus.h
 	@printf "$(YELLOW)🛠 Compiling...$(CLOSE)"
 	@$(CC) $(FLAGS) -c $< -o $@
 	@printf "$(GREEN)✅ Compiled!$(CLOSE)"

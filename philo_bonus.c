@@ -6,7 +6,7 @@
 /*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:05 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/28 18:49:00 by skully           ###   ########.fr       */
+/*   Updated: 2025/07/01 12:27:34 by skully           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,35 +53,6 @@ int check_args(t_manager *manager, char **av)
 		return -1;
 	return 0;
 }
-
-
-
-// int ft_sleep(t_philo *philo, int time_ms)
-// {
-//     long start_time = get_current_time(philo);
-//     long elapsed;
-    
-//     while(1)
-//     {
-//         if(philo->manager->died == true)
-//             return 1;
-            
-//         elapsed = get_current_time(philo) - start_time;
-//         if(elapsed >= time_ms)
-//             break;
-            
-//         // Sleep for smaller chunks near the end for better precision
-//         long remaining = time_ms - elapsed;
-//         if(remaining > 1000) // > 1ms
-//             usleep(500); // Sleep 0.5ms
-//         else if(remaining > 100) // > 0.1ms  
-//             usleep(50);  // Sleep 0.05ms
-//         else
-//             usleep(10);  // Sleep 0.01ms for final precision
-//     }
-//     return 0;
-// }
-
 
 void *monitor(void *arg)
 {
@@ -141,6 +112,7 @@ void ft_clean(t_manager *manager)
 
 int philosophy(t_manager *manager)
 {
+    manager->sem = sem_open("/philo_sem", 0);
     pthread_mutex_init(&manager->death_check, NULL);
     pthread_mutex_init(&manager->time_lock, NULL);
     pthread_create(&manager->monitor, NULL, &monitor, &manager);
@@ -172,6 +144,7 @@ int philosophy(t_manager *manager)
             return(ft_clean(manager), exit(EXIT_FAILURE), 1);
     }
     pthread_join(manager->monitor, NULL);
+    sem_close(manager->sem);
     return (exit(EXIT_SUCCESS), 0);
 }
 
