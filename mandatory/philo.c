@@ -6,7 +6,7 @@
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:05 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/28 11:09:04 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/07/04 10:31:33 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -156,29 +156,33 @@ void *routine(void *arg)
     struct timeval tv;
 
     philo = (t_philo *)arg;
-    philo->current_time = philo->manager->start_time;
     while(philo->manager->all_ready == false);
     // printf("im here\n");
     gettimeofday(&tv, NULL);
     if(philo->index % 2 == 0)
     {
         // usleep(2000);
-        printf("%ld %d is sleeping\n", get_current_time(philo) ,philo->index);
+        printf("%ld %d is sleeping\n", get_current_time_2(philo->manager) ,philo->index);
         if(ft_sleep(philo, philo->manager->time_to_sleep) == 1)
             return NULL;
         // usleep(philo->manager->time_to_sleep * 1000);
     }
-    while(!philo->manager->died)
+    while(1)
     {
-        printf("%ld %d is thinking\n", get_current_time(philo) ,philo->index);
+        // pthread_mutex_lock(&philo->manager->death_check);
+        // if(philo->manager->died == true)
+        //     return (pthread_mutex_unlock(&philo->manager->death_check), NULL);
+        printf("%ld %d is thinking\n", get_current_time_2(philo->manager) ,philo->index);
         pthread_mutex_lock(philo->left);
-        // printf("%ld %d has taken a fork\n", get_current_time(philo) ,philo->index);
+        printf("%ld %d has taken a fork\n", get_current_time_2(philo->manager) ,philo->index);
+        // printf("%ld %d has taken a fork\n", get_current_time_2(philo->manager) ,philo->index);
         pthread_mutex_lock(philo->right);
-        // printf("%ld %d has taken a fork\n", get_current_time(philo) ,philo->index);
+        printf("%ld %d has taken a fork\n", get_current_time_2(philo->manager) ,philo->index);
+        // printf("%ld %d has taken a fork\n", get_current_time_2(philo->manager) ,philo->index);
         pthread_mutex_lock(&philo->time_lock);
-        philo->time_since_ate = get_current_time(philo);
+        philo->time_since_ate = get_current_time_2(philo->manager);
         pthread_mutex_unlock(&philo->time_lock);
-        printf("%ld %d is eating\n", get_current_time(philo) ,philo->index);
+        printf("%ld %d is eating\n", get_current_time_2(philo->manager) ,philo->index);
         if(ft_sleep(philo, philo->manager->time_to_eat) == 1)
         {
             pthread_mutex_unlock(philo->left);
@@ -188,7 +192,7 @@ void *routine(void *arg)
         // usleep(philo->manager->time_to_eat * 1000);
         pthread_mutex_unlock(philo->left);
         pthread_mutex_unlock(philo->right);
-        printf("%ld %d is sleeping\n", get_current_time(philo) ,philo->index);
+        printf("%ld %d is sleeping\n", get_current_time_2(philo->manager) ,philo->index);
         if(ft_sleep(philo, philo->manager->time_to_sleep) == 1)
             return NULL;
         // usleep(philo->manager->time_to_sleep * 1000);
@@ -276,7 +280,7 @@ int main(int ac, char **av)
     }
     pthread_join(manager.monitor, NULL);
     if(manager.died)
-        printf("%ld %d died\n", manager.death_time ,manager.philos[manager.death_index].index);
+        printf("%ld %d died\n", get_current_time_2(&manager) ,manager.philos[manager.death_index].index);
     destroy_mutex(&manager);
     return (0);
 }
