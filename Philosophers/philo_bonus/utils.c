@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 11:08:38 by mel-adna          #+#    #+#             */
-/*   Updated: 2025/07/01 12:57:39 by skully           ###   ########.fr       */
+/*   Updated: 2025/07/04 13:15:42 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ void	print_status(t_philo *philo, char *status)
 
 	args = philo->args;
 	sem_wait(args->print_lock);
-	printf("%ld %d %s\n", (get_time() - args->start_time), philo->id, status);
+	printf("%llu %d %s\n", (get_time() - args->start_time), philo->id, status);
 	sem_post(args->print_lock);
 }
 

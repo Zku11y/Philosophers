@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   simulation.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 11:08:34 by mel-adna          #+#    #+#             */
-/*   Updated: 2025/07/01 12:57:51 by skully           ###   ########.fr       */
+/*   Updated: 2025/07/04 20:22:14 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ void	*check_death(void *arg)
 		if (get_time() - philo->last_meal >= args->t_die)
 		{
 			sem_wait(args->print_lock);
-			printf("%ld %d died\n", (get_time() - args->start_time),
+			printf("%llu %d died\n", (get_time() - args->start_time),
 				philo->id);
 			exit(1);
 		}

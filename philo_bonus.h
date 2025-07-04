@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo_bonus.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:07 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/28 18:46:53 by skully           ###   ########.fr       */
+/*   Updated: 2025/07/04 20:32:55 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,6 @@ typedef struct s_manager
     long death_time;
     long start_time;
     pthread_mutex_t *forks;
-    pthread_mutex_t death_check;
     pthread_t monitor;
     t_philo *philos;
     int number_of_philosophers;
@@ -63,13 +62,15 @@ typedef struct s_manager
     int time_to_eat;
     int time_to_sleep;
     int number_of_times_to_eat;
+    int times_ate;
     bool died;
-    bool all_ready;
     bool parent;
     struct timeval tv;
     pid_t *pids;
     sem_t *sem;
-    pthread_mutex_t time_lock;
+    sem_t *death_check;
+    sem_t *time_lock;
+    sem_t *all_ready;
     long time_since_ate;
 }   t_manager;
 
