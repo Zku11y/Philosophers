@@ -6,7 +6,7 @@
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:07 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/28 13:15:57 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/07/05 17:59:37 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ typedef struct s_philo
     pthread_mutex_t *left;
     pthread_mutex_t *right;
     pthread_mutex_t time_lock;
+    pthread_mutex_t ate_number;
     pthread_t thread;
     int times_ate;
     t_manager *manager;
@@ -52,6 +53,7 @@ typedef struct s_manager
     long start_time;
     pthread_mutex_t *forks;
     pthread_mutex_t death_check;
+    pthread_mutex_t all_philos_eat;
     pthread_t monitor;
     t_philo *philos;
     int number_of_philosophers;
@@ -62,8 +64,10 @@ typedef struct s_manager
     bool died;
     bool all_ready;
     struct timeval tv;
+    int philos_ate;
 }   t_manager;
 
 
 int	ft_atoi(const char *str);
 void	*ft_calloc(size_t count, size_t size);
+void	*ft_memset(void *b, int c, size_t len);

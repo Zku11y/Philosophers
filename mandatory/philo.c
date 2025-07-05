@@ -6,7 +6,7 @@
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:05 by mdakni            #+#    #+#             */
-/*   Updated: 2025/07/04 10:31:33 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/07/05 18:03:07 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,23 +30,27 @@ long get_current_time_2(t_manager *manager)
     return current_time - manager->start_time;
 }
 
-int assign_manager_time(t_manager *manager, int *val)
+int assign_manager_time(t_manager *manager, int ac, int *val)
 {
-    struct timeval tv;
     if(val[0] == 0 || val[1] == 0 || val[2] == 0 || val[3] == 0 || (val[4] != -1 && val[4] == 0))
     {return (-1);}
 	manager->number_of_philosophers = val[0];
 	manager->time_to_die = val[1];
 	manager->time_to_eat = val[2];
 	manager->time_to_sleep = val[3];
-	manager->number_of_times_to_eat = val[4];
+    if(ac == 5)
+    	manager->number_of_times_to_eat = -1;
+    else
+    	manager->number_of_times_to_eat = val[4];
     manager->died = false;
     manager->all_ready = false;
+    manager->philos_ate = 0;
     pthread_mutex_init(&manager->death_check, NULL);
+    pthread_mutex_init(&manager->all_philos_eat, NULL);
 	return (0);
 }
 
-int check_args(t_manager *manager, char **av)
+int check_args(t_manager *manager, int ac, char **av)
 {
     int i;
     int val[6];
@@ -58,7 +62,7 @@ int check_args(t_manager *manager, char **av)
         i++;
     }
     val[i - 1] = -1;
-	if(assign_manager_time(manager, val) == -1)
+	if(assign_manager_time(manager, ac, val) == -1)
 		return -1;
 	return 0;
 }
@@ -80,16 +84,13 @@ void *monitor(void *arg)
     long check_time;
     int i;
 
-    // printf("\e[1;31mIM HEREEEERE!!!\e[0m\n");
     manager = (t_manager *)arg;
     while(manager->all_ready == false);
-    // printf("\e[1;32mmanager time since %d ate : %ld\e[0m\n", 0, manager->philos[0].time_since_ate);
-    while(!manager->died)
+    while(1)
     {
         i = 0;
         while(i < manager->number_of_philosophers)
         {
-            // printf("\e[1;32mmanager time since %d ate : %ld\e[0m\n", i, manager->philos[i].time_since_ate);
             pthread_mutex_lock(&manager->philos[i].time_lock);
             check_time = get_current_time_2(manager) - manager->philos[i].time_since_ate;
             pthread_mutex_unlock(&manager->philos[i].time_lock);
@@ -98,41 +99,21 @@ void *monitor(void *arg)
                 manager->death_time = check_time;
                 pthread_mutex_lock(&manager->death_check);
                 manager->died = true;
+                printf("%ld %d died\n", get_current_time_2(manager) ,i);
                 pthread_mutex_unlock(&manager->death_check);
                 manager->death_index = i;
                 return NULL;
             }
+            pthread_mutex_lock(&manager->all_philos_eat);
+            if(manager->number_of_times_to_eat != -1 && manager->philos_ate == manager->number_of_philosophers)
+                return (pthread_mutex_unlock(&manager->philos[i].ate_number), NULL);
+            pthread_mutex_unlock(&manager->all_philos_eat);
             i++;
         }
+        usleep(100);
     }
     return NULL;
 }
-
-// int ft_sleep(t_philo *philo, int time_ms)
-// {
-//     long start_time = get_current_time(philo);
-//     long elapsed;
-    
-//     while(1)
-//     {
-//         if(philo->manager->died == true)
-//             return 1;
-            
-//         elapsed = get_current_time(philo) - start_time;
-//         if(elapsed >= time_ms)
-//             break;
-            
-//         // Sleep for smaller chunks near the end for better precision
-//         long remaining = time_ms - elapsed;
-//         if(remaining > 1000) // > 1ms
-//             usleep(500); // Sleep 0.5ms
-//         else if(remaining > 100) // > 0.1ms  
-//             usleep(50);  // Sleep 0.05ms
-//         else
-//             usleep(10);  // Sleep 0.01ms for final precision
-//     }
-//     return 0;
-// }
 
 int ft_sleep(t_philo *philo, int time)
 {
@@ -150,6 +131,50 @@ int ft_sleep(t_philo *philo, int time)
     return 0;
 }
 
+int ft_print(t_philo *philo, char *str)
+{
+    pthread_mutex_lock(&philo->manager->death_check);
+    if(philo->manager->died)
+        return 1;
+    printf("%ld %d %s\n", get_current_time_2(philo->manager) ,philo->index, str);
+    pthread_mutex_unlock(&philo->manager->death_check);
+        return 0;
+}
+
+int ft_eat(t_philo *philo)
+{
+    pthread_mutex_lock(philo->left);
+    if(ft_print(philo, "has taken a fork") == 1)
+        return 1;
+    pthread_mutex_lock(philo->right);
+    if(ft_print(philo, "has taken a fork") == 1)
+        return 1;
+    pthread_mutex_lock(&philo->time_lock);
+    philo->time_since_ate = get_current_time_2(philo->manager);
+    pthread_mutex_unlock(&philo->time_lock);
+    if(ft_print(philo, "is eating") == 1)
+        return 1;
+    if(ft_sleep(philo, philo->manager->time_to_eat) == 1)
+    {
+        pthread_mutex_unlock(philo->left);
+        pthread_mutex_unlock(philo->right);
+        return 1;
+    }
+    pthread_mutex_unlock(philo->left);
+    pthread_mutex_unlock(philo->right);
+    pthread_mutex_lock(&philo->ate_number);
+    philo->times_ate++;
+    if(philo->manager->number_of_times_to_eat != -1 && philo->times_ate > philo->manager->number_of_times_to_eat)
+    {
+        pthread_mutex_lock(&philo->manager->all_philos_eat);
+        philo->manager->philos_ate++;
+        pthread_mutex_unlock(&philo->manager->all_philos_eat);
+        return (pthread_mutex_unlock(&philo->ate_number), 1);
+    }
+    pthread_mutex_unlock(&philo->ate_number);
+    return 0;
+}
+
 void *routine(void *arg)
 {
     t_philo *philo;
@@ -157,48 +182,23 @@ void *routine(void *arg)
 
     philo = (t_philo *)arg;
     while(philo->manager->all_ready == false);
-    // printf("im here\n");
     gettimeofday(&tv, NULL);
     if(philo->index % 2 == 0)
     {
-        // usleep(2000);
         printf("%ld %d is sleeping\n", get_current_time_2(philo->manager) ,philo->index);
         if(ft_sleep(philo, philo->manager->time_to_sleep) == 1)
             return NULL;
-        // usleep(philo->manager->time_to_sleep * 1000);
     }
     while(1)
     {
-        // pthread_mutex_lock(&philo->manager->death_check);
-        // if(philo->manager->died == true)
-        //     return (pthread_mutex_unlock(&philo->manager->death_check), NULL);
+        
         printf("%ld %d is thinking\n", get_current_time_2(philo->manager) ,philo->index);
-        pthread_mutex_lock(philo->left);
-        printf("%ld %d has taken a fork\n", get_current_time_2(philo->manager) ,philo->index);
-        // printf("%ld %d has taken a fork\n", get_current_time_2(philo->manager) ,philo->index);
-        pthread_mutex_lock(philo->right);
-        printf("%ld %d has taken a fork\n", get_current_time_2(philo->manager) ,philo->index);
-        // printf("%ld %d has taken a fork\n", get_current_time_2(philo->manager) ,philo->index);
-        pthread_mutex_lock(&philo->time_lock);
-        philo->time_since_ate = get_current_time_2(philo->manager);
-        pthread_mutex_unlock(&philo->time_lock);
-        printf("%ld %d is eating\n", get_current_time_2(philo->manager) ,philo->index);
-        if(ft_sleep(philo, philo->manager->time_to_eat) == 1)
-        {
-            pthread_mutex_unlock(philo->left);
-            pthread_mutex_unlock(philo->right);
+        if(ft_eat(philo) == 1)
             return NULL;
-        }
-        // usleep(philo->manager->time_to_eat * 1000);
-        pthread_mutex_unlock(philo->left);
-        pthread_mutex_unlock(philo->right);
         printf("%ld %d is sleeping\n", get_current_time_2(philo->manager) ,philo->index);
         if(ft_sleep(philo, philo->manager->time_to_sleep) == 1)
             return NULL;
-        // usleep(philo->manager->time_to_sleep * 1000);
     }
-    // if(philo->manager->death_index == philo->index)
-    //     printf("%ld %d died\n", get_current_time(philo) ,philo->index);
     return NULL;
 }
 
@@ -217,7 +217,9 @@ void init_philo(t_manager *manager)
         manager->philos[i].manager = manager;
         manager->philos[i].time_since_ate = get_current_time(&manager->philos[i]);
         manager->philos[i].created = false;
+        manager->philos[i].times_ate = 0;
         pthread_mutex_init(&(manager->philos[i].time_lock), NULL);
+        pthread_mutex_init(&(manager->philos[i].ate_number), NULL);
         i++;
     }
 
@@ -244,9 +246,11 @@ void destroy_mutex(t_manager *manager)
     {
         pthread_mutex_destroy(&(manager->forks[i]));
         pthread_mutex_destroy(&(manager->philos[i].time_lock));
+        pthread_mutex_destroy(&(manager->philos[i].ate_number));
         i++;
     }
     pthread_mutex_destroy(&manager->death_check);
+    pthread_mutex_destroy(&manager->all_philos_eat);
 }
 
 int main(int ac, char **av)
@@ -255,10 +259,12 @@ int main(int ac, char **av)
 
     if(ac > 6 || ac < 5)
         return(printf("\e[1;31mError : Invalid number of arguments\e[0m\n"), 1);
-    if(check_args(&manager, av) == -1)
+    if(check_args(&manager, ac, av) == -1)
         {return(printf("\e[1;33mError : Invalid values in arguments\e[0m\n"), 1);}
 	if(alloc_philo_fork(&manager) == -1)
         return(printf("\e[1;31mError : Memory allocation error\e[0m\n"), 1);
+    gettimeofday(&manager.tv, NULL);
+    manager.start_time = (manager.tv.tv_sec * 1000) + (manager.tv.tv_usec / 1000);
     init_philo(&manager);
     init_forks(&manager);
     manager.index = 0;
@@ -270,24 +276,13 @@ int main(int ac, char **av)
     }
     pthread_create(&manager.monitor, NULL, &monitor, &manager);
     manager.all_ready = true;
-    gettimeofday(&manager.tv, NULL);
-    manager.start_time = (manager.tv.tv_sec * 1000) + (manager.tv.tv_usec / 1000);
     manager.index = 0;
     while(manager.index < manager.number_of_philosophers)
     {
         pthread_join(manager.philos[manager.index].thread, NULL);
         manager.index++;
     }
-    pthread_join(manager.monitor, NULL);
-    if(manager.died)
-        printf("%ld %d died\n", get_current_time_2(&manager) ,manager.philos[manager.death_index].index);
+    pthread_join(manager.monitor, NULL);        
     destroy_mutex(&manager);
     return (0);
 }
-
-	// printf("Correct args!\n");
-	// printf("philos : %d\n", manager.number_of_philosophers);
-	// printf("time_to_die : %d\n", manager.time_to_die);
-	// printf("time_to_eat : %d\n", manager.time_to_eat);
-	// printf("time_to_sleep : %d\n", manager.time_to_sleep);
-	// printf("number_of_times_to_eat : %d\n", manager.number_of_times_to_eat);

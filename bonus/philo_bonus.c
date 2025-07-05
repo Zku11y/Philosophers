@@ -6,7 +6,7 @@
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:05 by mdakni            #+#    #+#             */
-/*   Updated: 2025/07/04 20:49:15 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/07/05 16:57:18 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,6 @@ long get_current_time_2(t_manager *manager)
 
 int assign_manager_time(t_manager *manager, int ac, int *val)
 {
-    struct timeval tv;
     if(val[0] == 0 || val[1] == 0 || val[2] == 0 || val[3] == 0 || (val[4] != -1 && val[4] == 0))
     {return (-1);}
 	manager->number_of_philosophers = val[0];
@@ -61,17 +60,16 @@ void *monitor(void *arg)
 {
     t_manager *manager;
     long check_time;
-    int i;
 
     manager = (t_manager *)arg;
     while(1)
     {
         sem_wait(manager->time_lock);
         check_time = get_current_time_2(manager) - manager->time_since_ate;
-        if(check_time > manager->time_to_die)
+        if(check_time >= manager->time_to_die)
         {
             sem_wait(manager->death_check);
-            printf("%ld %d has died\n", get_current_time_2(manager), manager->index);
+            printf("%ld %d died\n", get_current_time_2(manager), manager->index);
             exit(1);
         }
         sem_post(manager->time_lock);
@@ -84,7 +82,7 @@ int philosophy(t_manager *manager)
     // printf("DEBUG: Philosophy function entered by process %d at %ldms\n", manager->index, get_current_time_2(manager));
     manager->times_ate = 0;
     manager->time_since_ate = get_current_time_2(manager);
-    pthread_create(&manager->monitor, NULL, &monitor, &manager);
+    pthread_create(&manager->monitor, NULL, &monitor, manager);
     pthread_detach(manager->monitor);
     if(manager->index % 2 == 0)
     {
@@ -112,7 +110,7 @@ int philosophy(t_manager *manager)
         sem_post(manager->death_check);
         usleep(manager->time_to_eat * 1000);
         manager->times_ate++;
-        if(manager->number_of_times_to_eat != -1 && manager->times_ate >= manager->number_of_times_to_eat)
+        if(manager->number_of_times_to_eat != -1 && manager->times_ate > manager->number_of_times_to_eat)
             exit(0);
         sem_post(manager->sem);
         sem_post(manager->sem);
@@ -129,7 +127,6 @@ int main(int ac, char **av)
     t_manager manager;
     pid_t pid;
     int status;
-    int exit_status;
 
     if(ac > 6 || ac < 5)
         return(printf("\e[1;31mError : Invalid number of arguments\e[0m\n"), 1);
