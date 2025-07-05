@@ -6,7 +6,7 @@
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:05 by mdakni            #+#    #+#             */
-/*   Updated: 2025/07/05 18:03:07 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/07/05 21:27:30 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,8 +32,8 @@ long get_current_time_2(t_manager *manager)
 
 int assign_manager_time(t_manager *manager, int ac, int *val)
 {
-    if(val[0] == 0 || val[1] == 0 || val[2] == 0 || val[3] == 0 || (val[4] != -1 && val[4] == 0))
-    {return (-1);}
+    if(val[0] < 1 || val[0] > 200 || val[1] <= 0 || val[2] <= 0 || val[3] <= 0 || (val[4] != -1 && val[4] <= 0))
+        return (-1);
 	manager->number_of_philosophers = val[0];
 	manager->time_to_die = val[1];
 	manager->time_to_eat = val[2];
@@ -100,6 +100,7 @@ void *monitor(void *arg)
                 pthread_mutex_lock(&manager->death_check);
                 manager->died = true;
                 printf("%ld %d died\n", get_current_time_2(manager) ,i);
+                // if(manager->number_of_philosophers == 1)
                 pthread_mutex_unlock(&manager->death_check);
                 manager->death_index = i;
                 return NULL;
@@ -110,7 +111,7 @@ void *monitor(void *arg)
             pthread_mutex_unlock(&manager->all_philos_eat);
             i++;
         }
-        usleep(100);
+        // usleep(100);
     }
     return NULL;
 }
@@ -128,27 +129,27 @@ int ft_sleep(t_philo *philo, int time)
         pthread_mutex_unlock(&philo->manager->death_check);
         usleep(100);
     }
-    return 0;
+    return (0);
 }
 
 int ft_print(t_philo *philo, char *str)
 {
     pthread_mutex_lock(&philo->manager->death_check);
     if(philo->manager->died)
-        return 1;
+        return (pthread_mutex_unlock(&philo->manager->death_check), 1);
     printf("%ld %d %s\n", get_current_time_2(philo->manager) ,philo->index, str);
     pthread_mutex_unlock(&philo->manager->death_check);
-        return 0;
+        return (0);
 }
 
 int ft_eat(t_philo *philo)
 {
     pthread_mutex_lock(philo->left);
     if(ft_print(philo, "has taken a fork") == 1)
-        return 1;
+        return (pthread_mutex_unlock(philo->left), 1);
     pthread_mutex_lock(philo->right);
     if(ft_print(philo, "has taken a fork") == 1)
-        return 1;
+        return (pthread_mutex_unlock(philo->left), pthread_mutex_unlock(philo->right), 1);
     pthread_mutex_lock(&philo->time_lock);
     philo->time_since_ate = get_current_time_2(philo->manager);
     pthread_mutex_unlock(&philo->time_lock);
@@ -175,6 +176,21 @@ int ft_eat(t_philo *philo)
     return 0;
 }
 
+int ft_eat_single(t_philo *philo)
+{
+    pthread_mutex_lock(philo->left);
+    if(ft_print(philo, "has taken a fork") == 1)
+        return 1;
+    while(1)
+    {
+        pthread_mutex_lock(&philo->manager->death_check);
+        if(philo->manager->died)
+            return 1;
+        pthread_mutex_unlock(&philo->manager->death_check);
+    }
+    return 0;
+}
+
 void *routine(void *arg)
 {
     t_philo *philo;
@@ -191,9 +207,10 @@ void *routine(void *arg)
     }
     while(1)
     {
-        
         printf("%ld %d is thinking\n", get_current_time_2(philo->manager) ,philo->index);
-        if(ft_eat(philo) == 1)
+        if(philo->manager->number_of_philosophers == 1 && ft_eat_single(philo) == 1)
+            return NULL;
+        else if(philo->manager->number_of_philosophers != 1 && ft_eat(philo) == 1)
             return NULL;
         printf("%ld %d is sleeping\n", get_current_time_2(philo->manager) ,philo->index);
         if(ft_sleep(philo, philo->manager->time_to_sleep) == 1)
@@ -213,7 +230,10 @@ void init_philo(t_manager *manager)
     {
         manager->philos[i].index = i;
         manager->philos[i].left = &(manager->forks[i]);
-        manager->philos[i].right = &(manager->forks[(i + 1) % n]);
+        if(manager->number_of_philosophers == 1)
+            manager->philos[i].right = NULL;
+        else
+            manager->philos[i].right = &(manager->forks[(i + 1) % n]);
         manager->philos[i].manager = manager;
         manager->philos[i].time_since_ate = get_current_time(&manager->philos[i]);
         manager->philos[i].created = false;
