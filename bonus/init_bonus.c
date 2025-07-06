@@ -6,7 +6,7 @@
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/06 13:41:47 by mdakni            #+#    #+#             */
-/*   Updated: 2025/07/06 13:42:11 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/07/06 14:20:30 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,6 @@ int	assign_manager_time(t_manager *manager, int ac, int *val)
 		manager->eat_times = -1;
 	else
 		manager->eat_times = val[4];
-	manager->died = false;
-	manager->all_ready = false;
 	return (0);
 }
 
