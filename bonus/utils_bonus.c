@@ -3,14 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   utils_bonus.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/12 14:02:09 by mdakni            #+#    #+#             */
-/*   Updated: 2025/06/28 18:36:48 by skully           ###   ########.fr       */
+/*   Updated: 2025/07/06 14:10:09 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo_bonus.h"
+
+long	ft_time(t_manager *manager)
+{
+	struct timeval	tv;
+	long			current_time;
+
+	gettimeofday(&tv, NULL);
+	current_time = (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+	return (current_time - manager->start_time);
+}
 
 void	*ft_memset(void *b, int c, size_t len)
 {

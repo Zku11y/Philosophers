@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo_bonus.h                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: skully <skully@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/24 11:08:29 by mel-adna          #+#    #+#             */
-/*   Updated: 2025/07/01 12:56:51 by skully           ###   ########.fr       */
+/*   Updated: 2025/07/06 14:10:21 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,12 @@
 # include <pthread.h>
 # include <semaphore.h>
 # include <signal.h>
+# include <stdint.h>
 # include <stdio.h>
 # include <stdlib.h>
 # include <string.h>
 # include <sys/time.h>
 # include <sys/wait.h>
-#include <stdint.h>
 # include <unistd.h>
 
 typedef struct s_args

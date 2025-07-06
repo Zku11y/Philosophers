@@ -1,12 +1,17 @@
 CC = cc
 NAME = philo
 BNAME = philo_bonus
-FLAGS = -Wall -Wextra -Werror
+FLAGS = -Wall -Wextra -Werror -o3
 SRC = mandatory/philo.c \
 	  mandatory/utils.c \
 	  mandatory/actions.c \
 	  mandatory/init.c
-BSRC = bonus/philo_bonus.c bonus/utils_bonus.c
+
+BSRC = bonus/philo_bonus.c \
+	   bonus/utils_bonus.c \
+	   bonus/init_bonus.c \
+	   bonus/actions_bonus.c
+
 OBJ = $(SRC:.c=.o)
 BOBJ = $(BSRC:.c=.o)
 

@@ -6,7 +6,7 @@
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:05 by mdakni            #+#    #+#             */
-/*   Updated: 2025/07/06 11:19:01 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/07/06 13:43:06 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ void	*monitor(void *arg)
 
 	manager = (t_manager *)arg;
 	while (manager->all_ready == false)
-		;
+		usleep(50);
 	while (1)
 	{
 		i = 0;
@@ -53,6 +53,7 @@ void	*monitor(void *arg)
 			pthread_mutex_unlock(&manager->all_philos_ate);
 			i++;
 		}
+		usleep(50);
 	}
 	return (NULL);
 }
@@ -64,7 +65,7 @@ void	*routine(void *arg)
 
 	philo = (t_philo *)arg;
 	while (philo->manager->all_ready == false)
-		;
+		usleep(50);
 	gettimeofday(&tv, NULL);
 	if (philo->index % 2 == 0)
 	{

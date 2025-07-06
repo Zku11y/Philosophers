@@ -6,7 +6,7 @@
 /*   By: mdakni <mdakni@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/22 15:44:07 by mdakni            #+#    #+#             */
-/*   Updated: 2025/07/06 11:16:41 by mdakni           ###   ########.fr       */
+/*   Updated: 2025/07/06 14:09:06 by mdakni           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,3 +74,13 @@ typedef struct s_manager
 
 int							ft_atoi(const char *str);
 void						*ft_calloc(size_t count, size_t size);
+int							assign_manager_time(t_manager *manager, int ac,
+								int *val);
+int							check_args(t_manager *manager, int ac, char **av);
+void						ft_print(t_manager *manager, char *str);
+void						ft_eat(t_manager *manager);
+void						ft_clean(t_manager *manager);
+void						ft_fork(t_manager *manager);
+void						ft_wait(t_manager *manager);
+long						ft_time(t_manager *manager);
+int							philosophy(t_manager *manager);
